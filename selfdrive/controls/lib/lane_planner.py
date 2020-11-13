@@ -1,6 +1,7 @@
 from common.numpy_fast import interp
 import numpy as np
 from cereal import log
+from selfdrive.ntune import ntune_get
 
 CAMERA_OFFSET = 0.06  # m from center car to camera
 
@@ -64,8 +65,11 @@ class LanePlanner:
 
   def update_d_poly(self, v_ego):
     # only offset left and right lane lines; offsetting p_poly does not make sense
-    self.l_poly[3] += CAMERA_OFFSET
-    self.r_poly[3] += CAMERA_OFFSET
+
+    cameraOffset = ntune_get("cameraOffset")
+
+    self.l_poly[3] += cameraOffset
+    self.r_poly[3] += cameraOffset
 
     # Reduce reliance on lanelines that are too far apart or
     # will be in a few seconds
@@ -100,6 +104,10 @@ class LanePlanner:
     path_from_right_lane[3] += clipped_lane_width / 2.0
 
     lr_prob = l_prob + r_prob - l_prob * r_prob
+
+    # neokii
+    if lr_prob > 0.65:
+      lr_prob = min(lr_prob * 1.35, 1.0)
 
     d_poly_lane = (l_prob * path_from_left_lane + r_prob * path_from_right_lane) / (l_prob + r_prob + 0.0001)
     self.d_poly = lr_prob * d_poly_lane + (1.0 - lr_prob) * self.p_poly.copy()
