@@ -100,17 +100,9 @@ class CarController():
     apply_accel = clip(apply_accel * ACCEL_SCALE, ACCEL_MIN, ACCEL_MAX)
 
     # Steering Torque
-
-    steerAngleAbs = abs(actuators.steerAngle)
-    limitParams = copy.copy(SteerLimitParams)
-
-    #limitParams.STEER_MAX = int(interp(steerAngleAbs, [0.], [SteerLimitParams.STEER_MAX]))
-    limitParams.STEER_DELTA_UP = int(interp(steerAngleAbs, [0., 5., 15.], [2, 3, 4]))
-    limitParams.STEER_DELTA_DOWN = int(interp(steerAngleAbs, [0., 5., 15.], [4, 5, 6]))
-
-    new_steer = actuators.steer * limitParams.STEER_MAX
+    new_steer = actuators.steer * SteerLimitParams.STEER_MAX
     apply_steer = apply_std_steer_torque_limits(new_steer, self.apply_steer_last, CS.out.steeringTorque,
-                                                limitParams)
+                                                SteerLimitParams)
 
     self.steer_rate_limited = new_steer != apply_steer
 
